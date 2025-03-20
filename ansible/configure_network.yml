@@ -1,0 +1,29 @@
+---
+- name: Configure network device
+  hosts: routers
+  gather_facts: no
+  vars_files:
+    - device_config.yaml
+  tasks:
+    - name: Configure interface
+      ios_config:
+        lines:
+          - interface {{ interface }}
+          - ip address {{ ip_address }} {{ subnet_mask }}
+          - no shutdown
+        save_when: changed
+
+    - name: Validate interface configuration
+      ios_command:
+        commands: "show ip interface {{ interface }}"
+      register: interface_output
+
+    - name: Check if IP address is configured correctly
+      debug:
+        msg: "Interface {{ interface }} is correctly configured with IP {{ ip_address }} {{ subnet_mask }}."
+      when: "ip_address in interface_output.stdout[0] and subnet_mask in interface_output.stdout[0]"
+
+    - name: Log error if configuration failed
+      debug:
+        msg: "Configuration validation failed for interface {{ interface }}."
+      when: "ip_address not in interface_output.stdout[0] or subnet_mask not in interface_output.stdout[0]"
