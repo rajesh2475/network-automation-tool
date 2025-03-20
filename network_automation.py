@@ -1,6 +1,11 @@
 import paramiko
 import time
 import yaml
+import logging
+
+# Configure logging
+logging.basicConfig(filename='network_automation.log', level=logging.ERROR,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 def execute_commands(host, username, password, commands, validate_interface=None, ip_address=None, subnet_mask=None):
     """
@@ -31,6 +36,7 @@ def execute_commands(host, username, password, commands, validate_interface=None
                 print(f"Command '{command}' executed successfully.\nOutput:\n{output}")
             else:
                 print(f"Command '{command}' failed to execute.\nError:\n{output}")
+                logging.error(f"Command '{command}' failed to execute. Error: {output}")
         
         # Validate interface configuration if required
         if validate_interface:
@@ -43,16 +49,23 @@ def execute_commands(host, username, password, commands, validate_interface=None
                 print(f"Interface {validate_interface} is correctly configured with IP {ip_address} {subnet_mask}.")
             else:
                 print(f"Configuration validation failed for interface {validate_interface}.")
+                logging.error(f"Configuration validation failed for interface {validate_interface}.")
         
         # Close the session and SSH connection
         shell.close()
         ssh.close()
     except paramiko.AuthenticationException:
-        print("Authentication failed. Please check your credentials.")
+        error_msg = "Authentication failed. Please check your credentials."
+        print(error_msg)
+        logging.error(error_msg)
     except paramiko.SSHException as ssh_error:
-        print(f"SSH error occurred: {ssh_error}")
+        error_msg = f"SSH error occurred: {ssh_error}"
+        print(error_msg)
+        logging.error(error_msg)
     except Exception as e:
-        print(f"An error occurred: {e}")
+        error_msg = f"An error occurred: {e}"
+        print(error_msg)
+        logging.error(error_msg)
 
 def configure_interface(host, username, password, interface, ip_address, subnet_mask):
     """
@@ -75,10 +88,22 @@ def load_device_config(file_path):
     try:
         with open(file_path, 'r') as file:
             config_data = yaml.safe_load(file)
+            if not isinstance(config_data, dict):
+                raise ValueError("Invalid YAML format: Expected a dictionary structure.")
         return config_data
+    except FileNotFoundError:
+        error_msg = f"Error: Configuration file '{file_path}' not found."
+        print(error_msg)
+        logging.error(error_msg)
+    except yaml.YAMLError as e:
+        error_msg = f"Error parsing YAML file: {e}"
+        print(error_msg)
+        logging.error(error_msg)
     except Exception as e:
-        print(f"Error loading YAML file: {e}")
-        return None
+        error_msg = f"Unexpected error loading YAML file: {e}"
+        print(error_msg)
+        logging.error(error_msg)
+    return None
 
 if __name__ == "__main__":
     # Load configuration from YAML
