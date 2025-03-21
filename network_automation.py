@@ -2,6 +2,7 @@ import paramiko
 import time
 import yaml
 import logging
+import os
 
 # Configure logging
 logging.basicConfig(filename='network_automation.log', level=logging.ERROR,
@@ -110,15 +111,19 @@ if __name__ == "__main__":
     config_file = "device_config.yaml"  # Specify your YAML file path
     device_config = load_device_config(config_file)
     
+    host = os.getenv("SSH_HOST")
+    username = os.getenv("SSH_USERNAME")
+    password = os.getenv("SSH_PASSWORD")
+    
     if device_config:
         if "interface" in device_config and "ip_address" in device_config and "subnet_mask" in device_config:
             configure_interface(
-                device_config["host"],
-                device_config["username"],
-                device_config["password"],
+                host,
+                username,
+                password,
                 device_config["interface"],
                 device_config["ip_address"],
                 device_config["subnet_mask"]
             )
         else:
-            execute_commands(device_config["host"], device_config["username"], device_config["password"], device_config["commands"])
+            execute_commands(host, username, password, device_config["commands"])
