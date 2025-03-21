@@ -9,6 +9,13 @@ This project provides two different approaches to automate network device config
 * executes configuration commands.
 * validates the configuration.
 * Logs errors for troubleshooting.
+*  Using HashiCorp Vault - to get secrets
+    ```python
+        import hvac
+        client = hvac.Client(url="http://127.0.0.1:8200", token="root")
+        secret = client.secrets.kv.read_secret_version(path="ise")
+        print(secret["data"]["data"]["password"])
+    ```
 
 ### Using Ansible: 
 * Uses Ansible playbooks to configure network devices.
